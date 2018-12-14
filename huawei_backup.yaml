@@ -1,0 +1,29 @@
+---
+- name: Acesso remoto aos equipamentos
+  hosts: routers
+  gather_facts: no
+  connection: local
+
+  tasks:
+  - name: OBTAIN LOGIN CREDENTIALS
+    include_vars: secret.yaml
+
+  - name: Define access
+    set_fact:
+      provider:
+        host: "{{ ansible_host }}"
+        port: "{{ creds['port'] }}"
+        username: "{{ creds['username'] }}"
+        password: "{{ creds['password'] }}"
+
+  - name: display current-config
+    ce_config:
+     provider: "{{ provider }}"
+     lines:
+      - display current-config
+     register: config
+
+  - name: save output Running
+      copy:
+        content: "{{ config.stdout[0] }}"
+        dest: "/etc/ansible/backup/{{ inventory_hostname }}_running.txt"
